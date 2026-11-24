@@ -7,6 +7,8 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 5
+  # Mark the rollout as failed after 60s (default 600s) so ArgoCD shows Degraded quickly
+  progressDeadlineSeconds: 60
   selector:
     matchLabels:
       app.kubernetes.io/name: demo-app

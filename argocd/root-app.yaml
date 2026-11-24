@@ -20,3 +20,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true
+  # A UI rollback disables auto-sync on the child app. Without this, root's
+  # self-heal would re-enable it at once and re-deploy the broken Git revision.
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /spec/syncPolicy/automated
