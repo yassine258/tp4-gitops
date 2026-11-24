@@ -1,0 +1,22 @@
+# App-of-Apps root: the only manifest applied by hand (kubectl apply -f argocd/root-app.yaml).
+# Everything else under argocd/apps/ is then managed by ArgoCD from Git.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassine258/tp4-gitops.git
+    targetRevision: main
+    path: argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
