@@ -1,0 +1,36 @@
+# ArgoCD control plane metrics (scraped across namespaces from monitoring/)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-application-controller
+spec:
+  namespaceSelector: { matchNames: [argocd] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: argocd-metrics }   # :8082 – argocd_app_info, argocd_app_sync_total, argocd_app_reconcile
+  endpoints:
+    - port: metrics
+      interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-server
+spec:
+  namespaceSelector: { matchNames: [argocd] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: argocd-server-metrics }   # :8083 – API / UI requests
+  endpoints:
+    - port: metrics
+      interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-repo-server
+spec:
+  namespaceSelector: { matchNames: [argocd] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: argocd-repo-server }   # :8084 – argocd_git_request_total, git fetch duration
+  endpoints:
+    - port: metrics
+      interval: 15s

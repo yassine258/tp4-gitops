@@ -1,0 +1,57 @@
+# Prometheus Operator + Prometheus + Alertmanager + Grafana + kube-state-metrics + node-exporter,
+# installed from the upstream Helm chart and managed by ArgoCD.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 93.9.0
+    helm:
+      releaseName: kps
+      valuesObject:
+        fullnameOverride: kps
+        # kind runs these control-plane parts inside the node container, so they can't be scraped.
+        # Turned off to avoid permanently firing TargetDown alerts.
+        kubeEtcd: { enabled: false }
+        kubeControllerManager: { enabled: false }
+        kubeScheduler: { enabled: false }
+        kubeProxy: { enabled: false }
+        prometheus-node-exporter:
+          hostRootFsMount: { enabled: false }   # WSL2/kind: / is not a shared mount
+        prometheus:
+          prometheusSpec:
+            scrapeInterval: 15s
+            evaluationInterval: 15s
+            retention: 2d
+            # Pick up every ServiceMonitor / PodMonitor / PrometheusRule in the cluster,
+            # not only the ones carrying the Helm release label.
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+        grafana:
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              searchNamespace: monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true    # the operator CRDs are too large for client-side apply
+    retry:
+      limit: 5
+      backoff: { duration: 10s, factor: 2, maxDuration: 3m }

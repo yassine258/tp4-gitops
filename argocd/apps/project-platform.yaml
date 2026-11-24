@@ -1,0 +1,22 @@
+# Platform components (monitoring) are kept apart from the app workloads (tp4 project).
+# They need cluster-scoped resources (CRDs, ClusterRoles, webhooks), so they get their own project.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Cluster platform components (observability)
+  sourceRepos:
+    - https://github.com/yassine258/tp4-gitops.git
+    - https://prometheus-community.github.io/helm-charts
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: kube-system   # the chart installs Services there for kubelet/coredns scraping
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

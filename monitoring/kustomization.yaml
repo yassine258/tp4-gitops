@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+resources:
+  - servicemonitors/argocd.yaml
+  - servicemonitors/demo-app.yaml
+  - alerts/gitops-alerts.yaml
+# The Grafana dashboard is versioned as JSON in Git. Grafana's sidecar loads every
+# ConfigMap labelled grafana_dashboard=1, so the dashboard itself is deployed by GitOps too.
+configMapGenerator:
+  - name: grafana-dashboard-tp4
+    files:
+      - dashboards/tp4-gitops.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

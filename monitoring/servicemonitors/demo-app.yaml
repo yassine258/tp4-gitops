@@ -1,0 +1,13 @@
+# Application metrics: prometheus-example-app serves /metrics on its http port
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-app
+spec:
+  namespaceSelector: { matchNames: [demo-dev, demo-prod] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: demo-app }
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
